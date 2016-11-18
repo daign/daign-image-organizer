@@ -31,6 +31,7 @@ def scan_folders():
 
 	rootdir = '.'
 	pattern = re.compile( '\.(jpg|jpeg|png|gif|bmp|tif|tiff)$' )
+	counter = 0
 
 	con = sqlite3.connect( 'daign-image-organizer.db' )
 	with con:
@@ -45,8 +46,9 @@ def scan_folders():
 					path = os.path.join( subdir, file )
 					hash_md5 = md5( path )
 					cur.execute( "INSERT INTO Paths VALUES(?,?)", ( hash_md5, path ) )
+					counter += 1
 
-	print 'scan finished'
+	return counter
 
 
 def get_all_tags():
@@ -85,7 +87,7 @@ def get_random_image( tag, name, stars_from, stars_to ):
 		cur = con.cursor()
 
 		# no limitation in query
-		if tag is None and name is None and stars_from == 0 and stars_to == 5:
+		if tag is None and name is None and stars_from == 0 and stars_to == 7:
 
 			cur.execute( "SELECT Hash FROM Paths ORDER BY RANDOM() LIMIT 1" )
 			hash_md5 = cur.fetchone()

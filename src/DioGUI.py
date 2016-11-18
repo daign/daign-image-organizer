@@ -36,12 +36,12 @@ class DioGUI( QtGui.QSplitter ):
 
 		search_stars_label = QtGui.QLabel( 'Stars' )
 		self.search_stars_from_input = QtGui.QSpinBox( self )
-		self.search_stars_from_input.setRange( 0, 5 )
+		self.search_stars_from_input.setRange( 0, 7 )
 		self.search_stars_from_input.setValue( 0 )
 		search_stars_to_label = QtGui.QLabel( 'to' )
 		self.search_stars_to_input = QtGui.QSpinBox( self )
-		self.search_stars_to_input.setRange( 0, 5 )
-		self.search_stars_to_input.setValue( 5 )
+		self.search_stars_to_input.setRange( 0, 7 )
+		self.search_stars_to_input.setValue( 7 )
 		search_stars_layout = QtGui.QHBoxLayout()
 		search_stars_layout.addWidget( search_stars_label )
 		search_stars_layout.addWidget( self.search_stars_from_input )
@@ -53,8 +53,8 @@ class DioGUI( QtGui.QSplitter ):
 
 		show_random_button = QtGui.QPushButton( 'Random Image', self )
 		show_random_button.clicked.connect( self.show_random_image )
-		show_all_button = QtGui.QPushButton( 'All Images', self )
-		show_all_button.setDisabled( True )
+		#show_all_button = QtGui.QPushButton( 'All Images', self )
+		#show_all_button.setDisabled( True )
 
 		search_box = QtGui.QGroupBox( 'Image Search', self )
 		search_grid = QtGui.QGridLayout()
@@ -64,7 +64,7 @@ class DioGUI( QtGui.QSplitter ):
 		search_grid.addWidget( self.search_names_list, 1, 1, 1, 1 )
 		search_grid.addWidget( search_stars_widget,    2, 0, 1, 2 )
 		search_grid.addWidget( show_random_button,     3, 0, 1, 1 )
-		search_grid.addWidget( show_all_button,        3, 1, 1, 1 )
+		#search_grid.addWidget( show_all_button,        3, 1, 1, 1 )
 		search_box.setLayout( search_grid )
 
 		details_paths_label = QtGui.QLabel( 'Paths' )
@@ -115,7 +115,23 @@ class DioGUI( QtGui.QSplitter ):
 
 	def scan_folders( self ):
 
-		Database.scan_folders()
+		image_counter = Database.scan_folders()
+
+		dialog = QtGui.QDialog()
+		dialog.setWindowTitle( 'Folder Scan Finished' )
+		dialog.setMinimumWidth( 200 )
+		dialog.setWindowModality( QtCore.Qt.ApplicationModal )
+
+		dialog_label = QtGui.QLabel( 'Found ' + str( image_counter ) + ' images' )
+		ok_button = QtGui.QPushButton( 'Ok', dialog )
+		ok_button.clicked.connect( dialog.accept )
+
+		dialog_layout = QtGui.QVBoxLayout()
+		dialog_layout.addWidget( dialog_label, 1 )
+		dialog_layout.addWidget( ok_button, 1 )
+		dialog.setLayout( dialog_layout )
+
+		dialog.exec_()
 
 
 	def load_tags( self ):
