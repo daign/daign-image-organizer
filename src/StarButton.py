@@ -1,3 +1,6 @@
+import pkg_resources
+from PIL import Image
+from PIL.ImageQt import ImageQt
 from PyQt4 import QtGui
 from PyQt4 import QtCore
 
@@ -10,8 +13,10 @@ class StarButton( QtGui.QAbstractButton ):
 
 		self.state = False
 
-		self.pixmap_on  = QtGui.QPixmap( 'images/star_on.png' )
-		self.pixmap_off = QtGui.QPixmap( 'images/star_off.png' )
+		image_on  = Image.open( pkg_resources.resource_stream( 'images', 'star_on.png' ) )
+		image_off = Image.open( pkg_resources.resource_stream( 'images', 'star_off.png' ) )
+		self.pixmap_on  = QtGui.QPixmap.fromImage( ImageQt( image_on ) )
+		self.pixmap_off = QtGui.QPixmap.fromImage( ImageQt( image_off ) )
 
 		self.pixmap = self.pixmap_off
 
