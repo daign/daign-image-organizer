@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import os
 import re
 import sys
@@ -12,19 +15,20 @@ def md5( fname ):
 	with open( fname, 'rb' ) as f:
 		for chunk in iter( lambda: f.read( 4096 ), b'' ):
 			hash_md5.update( chunk )
-	return hash_md5.hexdigest()
+	return sqlite3.Binary( hash_md5.digest() )
 
 
 def create_database():
 
 	con = sqlite3.connect( 'daign-image-organizer.db' )
+	con.text_factory = str
 	with con:
 
 		cur = con.cursor()
-		cur.execute( "CREATE TABLE IF NOT EXISTS Paths(Hash TEXT, Path TEXT)" )
-		cur.execute( "CREATE TABLE IF NOT EXISTS Images(Hash TEXT PRIMARY KEY, Stars INT)" )
-		cur.execute( "CREATE TABLE IF NOT EXISTS Tags(Hash TEXT, Tag TEXT)" )
-		cur.execute( "CREATE TABLE IF NOT EXISTS Names(Hash TEXT, Name TEXT)" )
+		cur.execute( "CREATE TABLE IF NOT EXISTS Paths(Hash BLOB, Path TEXT)" )
+		cur.execute( "CREATE TABLE IF NOT EXISTS Images(Hash BLOB PRIMARY KEY, Stars INT)" )
+		cur.execute( "CREATE TABLE IF NOT EXISTS Tags(Hash BLOB, Tag TEXT)" )
+		cur.execute( "CREATE TABLE IF NOT EXISTS Names(Hash BLOB, Name TEXT)" )
 
 
 def scan_folders():
@@ -34,11 +38,12 @@ def scan_folders():
 	counter = 0
 
 	con = sqlite3.connect( 'daign-image-organizer.db' )
+	con.text_factory = str
 	with con:
 
 		cur = con.cursor()
 		cur.execute( "DROP TABLE IF EXISTS Paths" )
-		cur.execute( "CREATE TABLE Paths(Hash TEXT, Path TEXT)" )
+		cur.execute( "CREATE TABLE Paths(Hash BLOB, Path TEXT)" )
 
 		for subdir, dirs, files in os.walk( rootdir ):
 			for file in files:
@@ -54,6 +59,7 @@ def scan_folders():
 def get_all_tags():
 
 	con = sqlite3.connect( 'daign-image-organizer.db' )
+	con.text_factory = str
 	with con:
 
 		cur = con.cursor()
@@ -68,6 +74,7 @@ def get_all_tags():
 def get_all_names():
 
 	con = sqlite3.connect( 'daign-image-organizer.db' )
+	con.text_factory = str
 	with con:
 
 		cur = con.cursor()
@@ -82,6 +89,7 @@ def get_all_names():
 def get_random_image( tag, name, stars_from, stars_to ):
 
 	con = sqlite3.connect( 'daign-image-organizer.db' )
+	con.text_factory = str
 	with con:
 
 		cur = con.cursor()
@@ -122,6 +130,7 @@ def get_random_image( tag, name, stars_from, stars_to ):
 def get_paths( hash_md5 ):
 
 	con = sqlite3.connect( 'daign-image-organizer.db' )
+	con.text_factory = str
 	with con:
 
 		cur = con.cursor()
@@ -136,6 +145,7 @@ def get_paths( hash_md5 ):
 def get_stars( hash_md5 ):
 
 	con = sqlite3.connect( 'daign-image-organizer.db' )
+	con.text_factory = str
 	with con:
 
 		cur = con.cursor()
@@ -150,6 +160,7 @@ def get_stars( hash_md5 ):
 def get_tags( hash_md5 ):
 
 	con = sqlite3.connect( 'daign-image-organizer.db' )
+	con.text_factory = str
 	with con:
 
 		cur = con.cursor()
@@ -164,6 +175,7 @@ def get_tags( hash_md5 ):
 def get_names( hash_md5 ):
 
 	con = sqlite3.connect( 'daign-image-organizer.db' )
+	con.text_factory = str
 	with con:
 
 		cur = con.cursor()
@@ -178,6 +190,7 @@ def get_names( hash_md5 ):
 def save_details( hash_md5, stars, tags, names ):
 
 	con = sqlite3.connect( 'daign-image-organizer.db' )
+	con.text_factory = str
 	with con:
 
 		cur = con.cursor()
@@ -203,6 +216,7 @@ def save_details( hash_md5, stars, tags, names ):
 def delete_entry( hash_md5 ):
 
 	con = sqlite3.connect( 'daign-image-organizer.db' )
+	con.text_factory = str
 	with con:
 
 		cur = con.cursor()

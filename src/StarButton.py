@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import pkg_resources
 from PIL import Image
 from PIL.ImageQt import ImageQt
