@@ -147,13 +147,41 @@ class DioGUI( QtGui.QSplitter ):
 		stars_from = self.search_stars_from_input.value()
 		stars_to = self.search_stars_to_input.value()
 
-		self.selected_range = Database.get_filtered_selection( tag, name, stars_from, stars_to )
+		self.set_selected_range( Database.get_filtered_selection( tag, name, stars_from, stars_to ) )
+
+
+	def set_selected_range( self, new_range ):
+
+		self.selected_range = new_range
+		self.view.list_needs_update = True
 
 
 	def show_all_images( self ):
 
 		self.get_filtered_selection()
 		self.selected_image = None
+
+		self.show_list()
+
+
+	def show_random_image( self ):
+
+		self.get_filtered_selection()
+
+		if len( self.selected_range ) > 0:
+
+			hash_md5 = random.choice( self.selected_range )
+			self.show_image( hash_md5 )
+
+		else:
+
+			self.selected_image = None
+
+			self.details.show_text( 'Found Nothing' )
+			self.view.show_text( 'Found Nothing' )
+
+
+	def show_list( self ):
 
 		if len( self.selected_range ) > 0:
 
@@ -166,23 +194,11 @@ class DioGUI( QtGui.QSplitter ):
 			self.view.show_text( 'Found Nothing' )
 
 
-	def show_random_image( self ):
+	def show_image( self, hash_md5 ):
 
-		self.get_filtered_selection()
+		self.selected_image = hash_md5
 
-		if len( self.selected_range ) > 0:
-
-			hash_md5 = random.choice( self.selected_range )
-			self.selected_image = hash_md5
-
-			self.details.show_image_details( hash_md5 )
-			self.view.show_image( hash_md5 )
-
-		else:
-
-			self.selected_image = None
-
-			self.details.show_text( 'Found Nothing' )
-			self.view.show_text( 'Found Nothing' )
+		self.details.show_image_details( hash_md5 )
+		self.view.show_image( hash_md5 )
 
 
