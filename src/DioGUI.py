@@ -7,7 +7,7 @@ from PyQt4 import QtCore
 
 import Database
 from DioView import DioView
-from StarsWidget import StarsWidget
+from DioDetails import DioDetails
 
 
 class DioGUI( QtGui.QSplitter ):
@@ -72,43 +72,12 @@ class DioGUI( QtGui.QSplitter ):
 		search_grid.addWidget( show_all_button,        3, 1, 1, 1 )
 		search_box.setLayout( search_grid )
 
-		details_paths_label = QtGui.QLabel( 'Paths' )
-		self.details_paths_input = QtGui.QTextEdit( '', self )
-		self.details_paths_input.setDisabled( True )
-		self.details_paths_input.setMaximumHeight( 45 )
-
-		details_stars_label = QtGui.QLabel( 'Stars' )
-		self.details_stars_input = StarsWidget( self )
-
-		details_tags_label = QtGui.QLabel( 'Tags' )
-		self.details_tags_input = QtGui.QLineEdit( '', self )
-
-		details_names_label = QtGui.QLabel( 'Names' )
-		self.details_names_input = QtGui.QLineEdit( '', self )
-
-		save_button = QtGui.QPushButton( 'Save', self )
-		save_button.clicked.connect( self.save_details )
-		delete_button = QtGui.QPushButton( 'Delete Entry', self )
-		delete_button.clicked.connect( self.delete_entry )
-
-		image_details_box = QtGui.QGroupBox( 'Image Details', self )
-		image_details_grid = QtGui.QGridLayout()
-		image_details_grid.addWidget( details_paths_label,      0, 0, 1, 1 )
-		image_details_grid.addWidget( self.details_paths_input, 0, 1, 1, 2 )
-		image_details_grid.addWidget( details_stars_label,      1, 0, 1, 1 )
-		image_details_grid.addWidget( self.details_stars_input, 1, 1, 1, 2 )
-		image_details_grid.addWidget( details_tags_label,       2, 0, 1, 1 )
-		image_details_grid.addWidget( self.details_tags_input,  2, 1, 1, 2 )
-		image_details_grid.addWidget( details_names_label,      3, 0, 1, 1 )
-		image_details_grid.addWidget( self.details_names_input, 3, 1, 1, 2 )
-		image_details_grid.addWidget( save_button,              4, 1, 1, 1 )
-		image_details_grid.addWidget( delete_button,            4, 2, 1, 1 )
-		image_details_box.setLayout( image_details_grid )
+		self.details = DioDetails( self )
 
 		controls_layout = QtGui.QVBoxLayout()
 		controls_layout.addWidget( scan_button, 1 )
 		controls_layout.addWidget( search_box, 2 )
-		controls_layout.addWidget( image_details_box, 1 )
+		controls_layout.addWidget( self.details, 1 )
 
 		controls_widget = QtGui.QWidget( self )
 		controls_widget.setLayout( controls_layout )
@@ -188,16 +157,13 @@ class DioGUI( QtGui.QSplitter ):
 
 		if len( self.selected_range ) > 0:
 
+			self.details.show_list_details( self.selected_range )
 			self.view.show_list( self.selected_range )
 
 		else:
 
+			self.details.show_text( 'Found Nothing' )
 			self.view.show_text( 'Found Nothing' )
-
-		self.details_paths_input.setText( '' )
-		self.details_stars_input.set_value( 0 )
-		self.details_tags_input.setText( '' )
-		self.details_names_input.setText( '' )
 
 
 	def show_random_image( self ):
@@ -209,38 +175,14 @@ class DioGUI( QtGui.QSplitter ):
 			hash_md5 = random.choice( self.selected_range )
 			self.selected_image = hash_md5
 
-			paths = Database.get_paths( hash_md5 )
+			self.details.show_image_details( hash_md5 )
 			self.view.show_image( hash_md5 )
-			self.details_paths_input.setText( '\n'.join( paths ) )
-			self.details_stars_input.set_value( Database.get_stars( hash_md5 ) )
-			self.details_tags_input.setText( Database.get_tags( hash_md5 ) )
-			self.details_names_input.setText( Database.get_names( hash_md5 ) )
 
 		else:
 
 			self.selected_image = None
 
+			self.details.show_text( 'Found Nothing' )
 			self.view.show_text( 'Found Nothing' )
-			self.details_paths_input.setText( '' )
-			self.details_stars_input.set_value( 0 )
-			self.details_tags_input.setText( '' )
-			self.details_names_input.setText( '' )
-
-
-	def save_details( self ):
-
-		if self.selected_image is not None:
-			Database.save_details(
-				self.selected_image,
-				self.details_stars_input.value,
-				str( self.details_tags_input.text() ),
-				str( self.details_names_input.text() )
-			)
-
-
-	def delete_entry( self ):
-
-		if self.selected_image is not None:
-			Database.delete_entry( self.selected_image )
 
 

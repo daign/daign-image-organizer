@@ -36,7 +36,7 @@ class DioView( QtGui.QStackedWidget ):
 		self.list.clear()
 		self.setCurrentWidget( self.list )
 
-		for h in hashes:
+		for h in hashes[0:200]:
 
 			paths = Database.get_paths( h )
 			if len( paths ) > 0:
