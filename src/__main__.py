@@ -26,7 +26,7 @@ def start_gui():
 			background: #bbb;
 		}
 	""" )
-	dio_gui = DioGUI( app )
+	dio_gui = DioGUI()
 	dio_gui.showMaximized()
 	sys.exit( app.exec_() )
 

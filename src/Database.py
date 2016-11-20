@@ -86,7 +86,7 @@ def get_all_names():
 			return None
 
 
-def get_random_image( tag, name, stars_from, stars_to ):
+def get_filtered_selection( tag, name, stars_from, stars_to ):
 
 	con = sqlite3.connect( 'daign-image-organizer.db' )
 	con.text_factory = str
@@ -97,34 +97,34 @@ def get_random_image( tag, name, stars_from, stars_to ):
 		# no limitation in query
 		if tag is None and name is None and stars_from == 0 and stars_to == 7:
 
-			cur.execute( "SELECT Hash FROM Paths ORDER BY RANDOM() LIMIT 1" )
-			hash_md5 = cur.fetchone()
+			cur.execute( "SELECT DISTINCT Hash FROM Paths ORDER BY Path" )
+			hashes = cur.fetchall()
 
-			if hash_md5 is not None:
-				return hash_md5[ 0 ]
+			if len( hashes ) > 0:
+				return [ h[ 0 ] for h in hashes ]
 			else:
-				return None
+				return []
 
 		# invalid range for stars, ignored
 		elif stars_from > stars_to:
 
-			cur.execute( "SELECT DISTINCT Hash FROM Paths LEFT OUTER JOIN Tags USING (Hash) LEFT OUTER JOIN Names USING (Hash) WHERE (Tag=? OR ? is NULL) AND (Name=? OR ? is NULL) ORDER BY RANDOM() LIMIT 1", ( tag, tag, name, name ) )
-			hash_md5 = cur.fetchone()
+			cur.execute( "SELECT DISTINCT Hash FROM Paths LEFT OUTER JOIN Tags USING (Hash) LEFT OUTER JOIN Names USING (Hash) WHERE (Tag=? OR ? is NULL) AND (Name=? OR ? is NULL) ORDER BY Path", ( tag, tag, name, name ) )
+			hashes = cur.fetchall()
 
-			if hash_md5 is not None:
-				return hash_md5[ 0 ]
+			if len( hashes ) > 0:
+				return [ h[ 0 ] for h in hashes ]
 			else:
-				return None
+				return []
 
 		else:
 
-			cur.execute( "SELECT DISTINCT Hash FROM Paths LEFT OUTER JOIN Images USING (Hash) LEFT OUTER JOIN Tags USING (Hash) LEFT OUTER JOIN Names USING (Hash) WHERE (Tag=? OR ? is NULL) AND (Name=? OR ? is NULL) AND ((Stars <= ? AND Stars >= ? ) OR (? is 0 AND Stars is NULL)) ORDER BY RANDOM() LIMIT 1", ( tag, tag, name, name, stars_to, stars_from, stars_from ) )
-			hash_md5 = cur.fetchone()
+			cur.execute( "SELECT DISTINCT Hash FROM Paths LEFT OUTER JOIN Images USING (Hash) LEFT OUTER JOIN Tags USING (Hash) LEFT OUTER JOIN Names USING (Hash) WHERE (Tag=? OR ? is NULL) AND (Name=? OR ? is NULL) AND ((Stars <= ? AND Stars >= ? ) OR (? is 0 AND Stars is NULL)) ORDER BY Path", ( tag, tag, name, name, stars_to, stars_from, stars_from ) )
+			hashes = cur.fetchall()
 
-			if hash_md5 is not None:
-				return hash_md5[ 0 ]
+			if len( hashes ) > 0:
+				return [ h[ 0 ] for h in hashes ]
 			else:
-				return None
+				return []
 
 
 def get_paths( hash_md5 ):

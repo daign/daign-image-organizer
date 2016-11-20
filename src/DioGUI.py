@@ -1,28 +1,30 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import random
 from PyQt4 import QtGui
 from PyQt4 import QtCore
 
 import Database
+from DioView import DioView
 from StarsWidget import StarsWidget
 
 
 class DioGUI( QtGui.QSplitter ):
 
-	def __init__( self, app, parent = None ):
+	def __init__( self, parent = None ):
 
-		QtGui.QWidget.__init__( self, parent )
+		QtGui.QSplitter.__init__( self, parent )
 		self.setWindowTitle( 'Daign Image Organizer' )
 
-		self.app = app
-		self.current_hash = None
+		self.selected_range = []
+		self.selected_image = None
 
 		Database.create_database()
 
 		# View
 
-		self.view = QtGui.QLabel( '' )
+		self.view = DioView( self )
 
 		# Controls
 
@@ -56,8 +58,8 @@ class DioGUI( QtGui.QSplitter ):
 
 		show_random_button = QtGui.QPushButton( 'Random Image', self )
 		show_random_button.clicked.connect( self.show_random_image )
-		#show_all_button = QtGui.QPushButton( 'All Images', self )
-		#show_all_button.setDisabled( True )
+		show_all_button = QtGui.QPushButton( 'All Images', self )
+		show_all_button.clicked.connect( self.show_all_images )
 
 		search_box = QtGui.QGroupBox( 'Image Search', self )
 		search_grid = QtGui.QGridLayout()
@@ -67,7 +69,7 @@ class DioGUI( QtGui.QSplitter ):
 		search_grid.addWidget( self.search_names_list, 1, 1, 1, 1 )
 		search_grid.addWidget( search_stars_widget,    2, 0, 1, 2 )
 		search_grid.addWidget( show_random_button,     3, 0, 1, 1 )
-		#search_grid.addWidget( show_all_button,        3, 1, 1, 1 )
+		search_grid.addWidget( show_all_button,        3, 1, 1, 1 )
 		search_box.setLayout( search_grid )
 
 		details_paths_label = QtGui.QLabel( 'Paths' )
@@ -159,7 +161,7 @@ class DioGUI( QtGui.QSplitter ):
 				self.search_names_list.addItem( n )
 
 
-	def show_random_image( self ):
+	def get_filtered_selection( self ):
 
 		tag = self.search_tags_list.currentItem()
 		if tag is not None:
@@ -176,26 +178,49 @@ class DioGUI( QtGui.QSplitter ):
 		stars_from = self.search_stars_from_input.value()
 		stars_to = self.search_stars_to_input.value()
 
-		hash_md5 = Database.get_random_image( tag, name, stars_from, stars_to )
-		self.current_hash = hash_md5
+		self.selected_range = Database.get_filtered_selection( tag, name, stars_from, stars_to )
 
-		if hash_md5 is not None:
+
+	def show_all_images( self ):
+
+		self.get_filtered_selection()
+		self.selected_image = None
+
+		if len( self.selected_range ) > 0:
+
+			self.view.show_list( self.selected_range )
+
+		else:
+
+			self.view.show_text( 'Found Nothing' )
+
+		self.details_paths_input.setText( '' )
+		self.details_stars_input.set_value( 0 )
+		self.details_tags_input.setText( '' )
+		self.details_names_input.setText( '' )
+
+
+	def show_random_image( self ):
+
+		self.get_filtered_selection()
+
+		if len( self.selected_range ) > 0:
+
+			hash_md5 = random.choice( self.selected_range )
+			self.selected_image = hash_md5
+
 			paths = Database.get_paths( hash_md5 )
-
-			if len( paths ) > 0:
-				pixmap = QtGui.QPixmap( paths[ 0 ] )
-				scaled_pixmap = pixmap.scaled( self.view.size(), QtCore.Qt.KeepAspectRatio )
-				self.view.setPixmap( scaled_pixmap )
-			else:
-				self.view.setText( 'No Image Found' )
-
+			self.view.show_image( hash_md5 )
 			self.details_paths_input.setText( '\n'.join( paths ) )
 			self.details_stars_input.set_value( Database.get_stars( hash_md5 ) )
 			self.details_tags_input.setText( Database.get_tags( hash_md5 ) )
 			self.details_names_input.setText( Database.get_names( hash_md5 ) )
 
 		else:
-			self.view.setText( 'Found Nothing' )
+
+			self.selected_image = None
+
+			self.view.show_text( 'Found Nothing' )
 			self.details_paths_input.setText( '' )
 			self.details_stars_input.set_value( 0 )
 			self.details_tags_input.setText( '' )
@@ -204,9 +229,9 @@ class DioGUI( QtGui.QSplitter ):
 
 	def save_details( self ):
 
-		if self.current_hash is not None:
+		if self.selected_image is not None:
 			Database.save_details(
-				self.current_hash,
+				self.selected_image,
 				self.details_stars_input.value,
 				str( self.details_tags_input.text() ),
 				str( self.details_names_input.text() )
@@ -215,7 +240,7 @@ class DioGUI( QtGui.QSplitter ):
 
 	def delete_entry( self ):
 
-		if self.current_hash is not None:
-			Database.delete_entry( self.current_hash )
+		if self.selected_image is not None:
+			Database.delete_entry( self.selected_image )
 
 
