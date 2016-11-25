@@ -8,6 +8,7 @@ from PyQt4 import QtCore
 import Database
 from DioView import DioView
 from DioDetails import DioDetails
+from DioScanDialog import DioScanDialog
 
 
 class DioGUI( QtGui.QSplitter ):
@@ -28,8 +29,10 @@ class DioGUI( QtGui.QSplitter ):
 
 		# Controls
 
+		self.scan_dialog = DioScanDialog( None )
+
 		scan_button = QtGui.QPushButton( 'Scan Folders', self )
-		scan_button.clicked.connect( self.scan_folders )
+		scan_button.clicked.connect( self.scan_dialog.show )
 
 		search_tags_button = QtGui.QPushButton( 'Load Tags', self )
 		search_tags_button.clicked.connect( self.load_tags )
@@ -85,27 +88,6 @@ class DioGUI( QtGui.QSplitter ):
 		self.addWidget( self.view )
 		self.addWidget( controls_widget )
 		self.setSizes( [ 600, 200 ] )
-
-
-	def scan_folders( self ):
-
-		image_counter = Database.scan_folders()
-
-		dialog = QtGui.QDialog()
-		dialog.setWindowTitle( 'Folder Scan Finished' )
-		dialog.setMinimumWidth( 200 )
-		dialog.setWindowModality( QtCore.Qt.ApplicationModal )
-
-		dialog_label = QtGui.QLabel( 'Found ' + str( image_counter ) + ' images' )
-		ok_button = QtGui.QPushButton( 'Ok', dialog )
-		ok_button.clicked.connect( dialog.accept )
-
-		dialog_layout = QtGui.QVBoxLayout()
-		dialog_layout.addWidget( dialog_label, 1 )
-		dialog_layout.addWidget( ok_button, 1 )
-		dialog.setLayout( dialog_layout )
-
-		dialog.exec_()
 
 
 	def load_tags( self ):

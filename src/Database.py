@@ -8,6 +8,8 @@ import string
 import sqlite3
 import hashlib
 
+import ImageSimilarity
+
 
 def md5( fname ):
 
@@ -26,16 +28,20 @@ def create_database():
 
 		cur = con.cursor()
 		cur.execute( "CREATE TABLE IF NOT EXISTS Paths(Hash BLOB, Path TEXT)" )
-		cur.execute( "CREATE TABLE IF NOT EXISTS Images(Hash BLOB PRIMARY KEY, Stars INT)" )
+		cur.execute( "CREATE TABLE IF NOT EXISTS Images(Hash BLOB PRIMARY KEY, Stars INT, Similarity TEXT)" )
 		cur.execute( "CREATE TABLE IF NOT EXISTS Tags(Hash BLOB, Tag TEXT)" )
 		cur.execute( "CREATE TABLE IF NOT EXISTS Names(Hash BLOB, Name TEXT)" )
 
 
-def scan_folders():
+def scan_folders( with_similarity, set_range_callback, set_value_callback ):
 
 	rootdir = '.'
 	pattern = re.compile( '\.(jpg|jpeg|png|gif|bmp|tif|tiff)$' )
 	counter = 0
+
+	path, dirs, files = os.walk( rootdir ).next()
+	set_range_callback( 0, len( files ) )
+
 
 	con = sqlite3.connect( 'daign-image-organizer.db' )
 	con.text_factory = str
@@ -46,12 +52,23 @@ def scan_folders():
 		cur.execute( "CREATE TABLE Paths(Hash BLOB, Path TEXT)" )
 
 		for subdir, dirs, files in os.walk( rootdir ):
-			for file in files:
+			for i, file in enumerate( files ):
+
 				if pattern.search( file ) is not None:
 					path = os.path.join( subdir, file )
 					hash_md5 = md5( path )
 					cur.execute( "INSERT INTO Paths VALUES(?,?)", ( hash_md5, path ) )
 					counter += 1
+
+					if with_similarity:
+						similarity_hash = ImageSimilarity.compute_similarity_hash( path )
+						cur.execute(
+							"""INSERT OR REPLACE INTO Images (Hash, Stars, Similarity)
+							VALUES(?,COALESCE((SELECT Stars FROM Images WHERE Hash=?), 0),?)""",
+							( hash_md5, hash_md5, similarity_hash )
+						)
+
+				set_value_callback( i+1 )
 
 	return counter
 
@@ -108,7 +125,12 @@ def get_filtered_selection( tag, name, stars_from, stars_to ):
 		# invalid range for stars, ignored
 		elif stars_from > stars_to:
 
-			cur.execute( "SELECT DISTINCT Hash FROM Paths LEFT OUTER JOIN Tags USING (Hash) LEFT OUTER JOIN Names USING (Hash) WHERE (Tag=? OR ? is NULL) AND (Name=? OR ? is NULL) ORDER BY Path", ( tag, tag, name, name ) )
+			cur.execute(
+				"""SELECT DISTINCT Hash FROM Paths
+				LEFT OUTER JOIN Tags USING (Hash) LEFT OUTER JOIN Names USING (Hash)
+				WHERE (Tag=? OR ? is NULL) AND (Name=? OR ? is NULL) ORDER BY Path""",
+				( tag, tag, name, name )
+			)
 			hashes = cur.fetchall()
 
 			if len( hashes ) > 0:
@@ -118,7 +140,14 @@ def get_filtered_selection( tag, name, stars_from, stars_to ):
 
 		else:
 
-			cur.execute( "SELECT DISTINCT Hash FROM Paths LEFT OUTER JOIN Images USING (Hash) LEFT OUTER JOIN Tags USING (Hash) LEFT OUTER JOIN Names USING (Hash) WHERE (Tag=? OR ? is NULL) AND (Name=? OR ? is NULL) AND ((Stars <= ? AND Stars >= ? ) OR (? is 0 AND Stars is NULL)) ORDER BY Path", ( tag, tag, name, name, stars_to, stars_from, stars_from ) )
+			cur.execute(
+				"""SELECT DISTINCT Hash FROM Paths
+				LEFT OUTER JOIN Images USING (Hash) LEFT OUTER JOIN Tags USING (Hash)
+				LEFT OUTER JOIN Names USING (Hash)
+				WHERE (Tag=? OR ? is NULL) AND (Name=? OR ? is NULL)
+				AND ((Stars <= ? AND Stars >= ? ) OR (? is 0 AND Stars is NULL)) ORDER BY Path""",
+				( tag, tag, name, name, stars_to, stars_from, stars_from )
+			)
 			hashes = cur.fetchall()
 
 			if len( hashes ) > 0:
@@ -155,6 +184,21 @@ def get_stars( hash_md5 ):
 			return 0
 		else:
 			return stars[ 0 ]
+
+
+def get_similarity_hash( hash_md5 ):
+
+	con = sqlite3.connect( 'daign-image-organizer.db' )
+	con.text_factory = str
+	with con:
+
+		cur = con.cursor()
+		cur.execute( "SELECT Similarity FROM Images WHERE Hash=?", ( hash_md5, ) )
+		similarity = cur.fetchone()
+		if similarity is None:
+			return None
+		else:
+			return similarity[ 0 ]
 
 
 def get_tags( hash_md5 ):
@@ -196,7 +240,11 @@ def save_details( hash_md5, stars, tags, names ):
 		cur = con.cursor()
 
 		if stars != 0:
-			cur.execute( "REPLACE INTO Images VALUES(?,?)", ( hash_md5, stars ) )
+			cur.execute(
+				"""INSERT OR REPLACE INTO Images(Hash, Stars, Similarity)
+				VALUES(?,?,(SELECT Similarity FROM Images WHERE Hash=?))""",
+				( hash_md5, stars, hash_md5 )
+			)
 
 		tags_list = re.split( ';|,', tags )
 		tags_list = [ string.capwords( t.lstrip().rstrip() ) for t in tags_list ]
