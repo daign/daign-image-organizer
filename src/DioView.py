@@ -38,6 +38,10 @@ class DioView( QtGui.QStackedWidget ):
 		back_action.triggered.connect( self.back_to_list )
 		self.label.addAction( back_action )
 
+		find_similar_action = QtGui.QAction( 'Find similar images', self )
+		find_similar_action.triggered.connect( self.find_similar )
+		self.label.addAction( find_similar_action )
+
 		self.addWidget( self.label )
 
 
@@ -101,5 +105,12 @@ class DioView( QtGui.QStackedWidget ):
 		else:
 
 			self.parent.show_list()
+
+
+	def find_similar( self ):
+
+		hashes = Database.get_similar( self.parent.selected_image, 20 )
+		self.parent.set_selected_range( hashes )
+		self.parent.show_list()
 
 

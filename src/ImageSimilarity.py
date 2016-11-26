@@ -31,6 +31,9 @@ def channel_to_hash( ch ):
 	return hash_string
 
 
+# A very simple perceptual hash using histograms.
+# Worked for me on rotated, scaled, cropped and desaturated copies.
+# Gives a 128 Bit binary string. Distance is measured by hamming distance.
 def compute_similarity_hash( path ):
 
 	image = Image.open( path )

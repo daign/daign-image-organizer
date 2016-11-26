@@ -11,7 +11,7 @@ I keep my photos organized in folders and normally that suits all my needs. Howe
 ### Functions
 
 * Scans for all the images in a directory and its subdirectories.
-* Randomly presents one images at a time.
+* Randomly presents one images at a time or all.
 * Images can be scored and tagged with categories and names.
 * The scores and tags can be used to filter the presented images.
 * Scores and tagging information is stored inside a database alongside the script.
@@ -27,11 +27,9 @@ Package the files in the src folder to a zip archive. Copy and run the zip file 
 
 ### Known Limitations
 
-* Folder scan may take a while but does not show any progress information. Only after it has finished a popup appears.
 * Image files are only recognised by file ending.
 * Gifs will not be displayed with animation.
 * No zooming in or out.
-* There is currently no systematic way to tag all files or to tag a specific file. Only way to use the program is by displaying random images.
 * Once image files are deleted from the file system and a new folder scan has been run, scores and tag information for the deleted images remain in the database. Since they are not shown anymore, there is currently no way to delete this entries.
 * It is not possible to select more than one tag for filtering. Though tag and name filters can be applied at once.
 * Images take up the maximum space inside the view area. Window cannot be sized down afterwards.

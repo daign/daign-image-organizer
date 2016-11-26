@@ -156,6 +156,31 @@ def get_filtered_selection( tag, name, stars_from, stars_to ):
 				return []
 
 
+def get_similar( hash_md5, quantity ):
+
+	sim_1 = get_similarity_hash( hash_md5 )
+
+	con = sqlite3.connect( 'daign-image-organizer.db' )
+	con.text_factory = str
+	with con:
+
+		cur = con.cursor()
+		cur.execute( """SELECT DISTINCT Hash,Similarity FROM Paths LEFT OUTER JOIN Images USING (Hash)""" )
+		results = cur.fetchall()
+
+		if len( results ) > 0:
+			candidates = [
+				( r[ 0 ], ImageSimilarity.compute_similarity_hash_difference( sim_1, r[ 1 ] ) )
+				for r in results
+			]
+			sorted_candidates = sorted( candidates, key=lambda c: c[1] )
+			limited_candidates = sorted_candidates[:quantity]
+			return [ c[ 0 ] for c in limited_candidates ]
+
+		else:
+			return []
+
+
 def get_paths( hash_md5 ):
 
 	con = sqlite3.connect( 'daign-image-organizer.db' )
