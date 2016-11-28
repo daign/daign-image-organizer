@@ -37,12 +37,15 @@ def scan_folders( with_similarity, set_range_callback, set_value_callback ):
 
 	rootdir = '.'
 	pattern = re.compile( '\.(jpg|jpeg|png|gif|bmp|tif|tiff)$' )
-	counter = 0
 
-	path, dirs, files = os.walk( rootdir ).next()
-	set_range_callback( 0, len( files ) )
+	counter_files = 0
+	for path, dirs, files in os.walk( rootdir ):
+		counter_files += len( files )
+	set_range_callback( 0, counter_files )
 
 
+	counter_files = 0
+	counter_images = 0
 	con = sqlite3.connect( 'daign-image-organizer.db' )
 	con.text_factory = str
 	with con:
@@ -52,13 +55,12 @@ def scan_folders( with_similarity, set_range_callback, set_value_callback ):
 		cur.execute( "CREATE TABLE Paths(Hash BLOB, Path TEXT)" )
 
 		for subdir, dirs, files in os.walk( rootdir ):
-			for i, file in enumerate( files ):
+			for file in files:
 
 				if pattern.search( file ) is not None:
 					path = os.path.join( subdir, file )
 					hash_md5 = md5( path )
 					cur.execute( "INSERT INTO Paths VALUES(?,?)", ( hash_md5, path ) )
-					counter += 1
 
 					if with_similarity:
 						similarity_hash = ImageSimilarity.compute_similarity_hash( path )
@@ -68,9 +70,12 @@ def scan_folders( with_similarity, set_range_callback, set_value_callback ):
 							( hash_md5, hash_md5, similarity_hash )
 						)
 
-				set_value_callback( i+1 )
+					counter_images += 1
 
-	return counter
+				counter_files += 1
+				set_value_callback( counter_files )
+
+	return counter_images
 
 
 def get_all_tags():

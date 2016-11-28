@@ -109,7 +109,7 @@ class DioView( QtGui.QStackedWidget ):
 
 	def find_similar( self ):
 
-		hashes = Database.get_similar( self.parent.selected_image, 20 )
+		hashes = Database.get_similar( self.parent.selected_image, 50 )
 		self.parent.set_selected_range( hashes )
 		self.parent.show_list()
 

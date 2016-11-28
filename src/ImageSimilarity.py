@@ -37,7 +37,10 @@ def channel_to_hash( ch ):
 def compute_similarity_hash( path ):
 
 	image = Image.open( path )
-	data = np.array( image, dtype='uint8' )
+	try:
+		data = np.array( image, dtype='uint8' )
+	except SystemError:
+		data = np.array( image.getdata(), dtype='uint8' )
 	#reverse: image = Image.fromarray( data )
 
 	# a single channel only
@@ -71,12 +74,16 @@ def compute_similarity_hash( path ):
 	hash_gray  = channel_to_hash( gray )
 
 	hash_string_complete = hash_red + hash_green + hash_blue + hash_gray
+	if len( hash_string_complete ) != 128:
+		print 'Warning: similarity hash with odd length ' + str( len( hash_string_complete ) ) + ' for image ' + path
 	return hash_string_complete
 
 
 def compute_similarity_hash_difference( s1, s2 ):
 
-	assert len( s1 ) == len( s2 )
-	return sum( c1 != c2 for c1, c2 in zip( s1, s2 ) )
+	if len( s1 ) != len( s2 ):
+		return 128
+	else:
+		return sum( c1 != c2 for c1, c2 in zip( s1, s2 ) )
 
 
