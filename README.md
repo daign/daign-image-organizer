@@ -16,7 +16,7 @@ I keep my photos organized in folders and normally that suits all my needs. Howe
 * The scores and tags can be used to filter the presented images.
 * Scores and tagging information is stored inside a database alongside the script.
 * Scores and tags are only linked to the hash of the image content, so renaming and moving the images around does not unlink the scores and tags.
-* The gui shows the folder path of the image and all its identical copies. (As long as the copies have the same hash. Linking images based on similarity invariant to cropping, rotation and color adjustments would be a cool feature for future development.)
+* The gui shows the folder path of the image and all its identical copies. (As long as the copies have the same hash. A simple algorithm that links images based on similarity invariant to cropping, rotation and color adjustments is also included.)
 * Several independent instances of the programm can be used for different folders on one system.
 
 ### Usage
